@@ -59,7 +59,7 @@ def generarLecturas(limit=None, batch_size=10000):
             for row in batch:
                 item = {
                     "lecturaId": row[0],
-                    "valor": row[1],
+                    "valor": float(row[1]) if row[1] is not None else None,
                     "timestamp": row[2].isoformat(),
                     "sensorNombre": row[3],
                     "tipoSensor": row[4],
