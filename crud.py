@@ -1,4 +1,5 @@
 from database import getConnection, releaseConnection
+import json
 
 def insertarLecturas(datos):
 
@@ -36,25 +37,42 @@ def insertarLecturas(datos):
         cursor.close()
         releaseConnection(conn)
 
-def obtenerLecturas(limit=10):
+def generarLecturas(limit=None, batch_size=10000):
 
     conn = getConnection()
-
     if conn is None:
-        return []
-    
+        return
+
     try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT * FROM vista_lecturas_completas
-            ORDER BY timestamp DESC
-            LIMIT %s;
-        """, (limit,))
-        rows = cursor.fetchall()
-        return rows
-    except Exception as e:
-        print("❌ Error al obtener lecturas:", e)
-        return []
+        cursor = conn.cursor(name="lecturas_cursor")
+        query = "SELECT * FROM vista_lecturas_completas ORDER BY timestamp DESC"
+        if limit:
+            query += f" LIMIT {limit}"
+        cursor.execute(query)
+
+        yield "["
+        first = True
+        while True:
+            batch = cursor.fetchmany(batch_size)
+            if not batch:
+                break
+            for row in batch:
+                item = {
+                    "lecturaId": row[0],
+                    "valor": row[1],
+                    "timestamp": row[2].isoformat(),
+                    "sensorNombre": row[3],
+                    "tipoSensor": row[4],
+                    "unidadMedicion": row[5],
+                    "estacionNombre": row[6],
+                    "estacionUbicacion": row[7]
+                }
+                if not first:
+                    yield ","
+                else:
+                    first = False
+                yield json.dumps(item)
+        yield "]"
     finally:
         cursor.close()
         releaseConnection(conn)
