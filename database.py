@@ -1,17 +1,18 @@
+import os
 import psycopg2
 from psycopg2 import pool
 
 DB_CONFIG = {
-    "host": "ep-floral-queen-a4wzkfnl-pooler.us-east-1.aws.neon.tech",
-    "port": 5432,
-    "database": "neondb",
-    "user": "neondb_owner",
-    "password": "npg_5o0BbRpjhsTx",
-    "sslmode": "require"
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT", 5432),
+    "database": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "sslmode": os.getenv("DB_SSLMODE", "require")
 }
 
 try:
-    connectionPool = psycopg2.pool.SimpleConnectionPool(1,5, **DB_CONFIG)
+    connectionPool = pool.SimpleConnectionPool(1,5, **DB_CONFIG)
     print(f"Conexion a la base de datos creada exitosamente: {connectionPool}")
 except Exception as e:
     print(f"Error creando conexion a la base de datos: {e}")
